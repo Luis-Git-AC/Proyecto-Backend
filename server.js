@@ -5,18 +5,37 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares básicos
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Conexión a MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ Conectado a MongoDB'))
-  .catch(err => console.log('❌ Error conectando a MongoDB:', err));
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+  .then(() => {
+    console.log('✅ Conectado a MongoDB Atlas');
+    console.log('📊 Base de datos:', mongoose.connection.name);
+    console.log('🎯 Host:', mongoose.connection.host);
+  })
+  .catch(err => {
+    console.log('❌ Error conectando a MongoDB:', err.message);
+    process.exit(1); 
+  });
 
-// Ruta básica de prueba
+app.get('/db-status', (req, res) => {
+  const estado = {
+    connected: mongoose.connection.readyState === 1,
+    database: mongoose.connection.name,
+    host: mongoose.connection.host,
+    models: Object.keys(mongoose.connection.models)
+  };
+  res.json(estado);
+});
+
 app.get('/', (req, res) => {
-  res.json({ message: 'Servidor funcionando!' });
+  res.json({ 
+    message: 'Servidor funcionando!',
+    database: mongoose.connection.readyState === 1 ? 'Conectado' : 'Desconectado'
+  });
 });
 
 app.listen(PORT, () => {
