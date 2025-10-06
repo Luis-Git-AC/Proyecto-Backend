@@ -7,6 +7,17 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log('📍 Petición recibida:', req.method, req.url);
+  console.log('📦 Body:', req.body);
+  next();
+});
+
+const { register, login } = require('./src/controllers/authController');
+
+app.post('/auth/register', register);
+app.post('/auth/login', login);
+
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -21,9 +32,8 @@ mongoose.connect(process.env.MONGODB_URI, {
     process.exit(1); 
   });
 
-require ('./src/models/User');
-require ('./src/models/Item');
-  
+require('./src/models/User');
+require('./src/models/Item');
 
 app.get('/db-status', (req, res) => {
   const estado = {
@@ -53,4 +63,3 @@ app.get('/test-models', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor en puerto ${PORT}`);
 });
-
