@@ -21,6 +21,10 @@ mongoose.connect(process.env.MONGODB_URI, {
     process.exit(1); 
   });
 
+require ('./src/models/User');
+require ('./src/models/Item');
+  
+
 app.get('/db-status', (req, res) => {
   const estado = {
     connected: mongoose.connection.readyState === 1,
@@ -38,6 +42,15 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/test-models', (req, res) => {
+  const { User, Item } = require('./src/models');
+  res.json({
+    userModel: User ? '✅ User model cargado' : '❌ User model no cargado',
+    itemModel: Item ? '✅ Item model cargado' : '❌ Item model no cargado'
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Servidor en puerto ${PORT}`);
 });
+
