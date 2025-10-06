@@ -11,4 +11,8 @@ registro de usuarios tul "user"
 login con jsonwebtoken
 contras encriptadas con bcrypt
 prueba insomnia
-(jwt ok)
+middleware de verificación + rutas protegidas funcionando
+endpoint para que admins cambien roles
+endpoint de eliminiación de cuentas
+
+fase 2 cloudinary

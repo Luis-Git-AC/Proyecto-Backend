@@ -21,6 +21,12 @@ app.post('/auth/login', login);
 const authMiddleware = require('./src/middleware/authMiddleware');
 const requireRole = require('./src/middleware/roleMiddleware');
 
+const { changeUserRole, getAllUsers, deleteUser } = require('./src/controllers/userController');
+
+app.get('/users', authMiddleware, requireRole(['admin']), getAllUsers);
+app.put('/users/role/:id', authMiddleware, requireRole(['admin']), changeUserRole);
+app.delete('/users/:id', authMiddleware, deleteUser); 
+
 app.get('/profile', authMiddleware, (req, res) => {
   res.json({
     message: 'Perfil del usuario',

@@ -9,9 +9,10 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: 'Acceso denegado. Token no proporcionado.' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    const user = await User.findById(decoded.id).select('-password');
+  const id = decoded.userId || decoded.id;
+  const user = await User.findById(id).select('-password');
     
     if (!user) {
       return res.status(401).json({ error: 'Token inválido. Usuario no encontrado.' });
