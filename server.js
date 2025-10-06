@@ -18,6 +18,30 @@ const { register, login } = require('./src/controllers/authController');
 app.post('/auth/register', register);
 app.post('/auth/login', login);
 
+const authMiddleware = require('./src/middleware/authMiddleware');
+const requireRole = require('./src/middleware/roleMiddleware');
+
+app.get('/profile', authMiddleware, (req, res) => {
+  res.json({
+    message: 'Perfil del usuario',
+    user: req.user
+  });
+});
+
+app.get('/admin/dashboard', authMiddleware, requireRole(['admin']), (req, res) => {
+  res.json({
+    message: 'Panel de administración',
+    user: req.user
+  });
+});
+
+app.get('/dashboard', authMiddleware, requireRole(['user', 'admin']), (req, res) => {
+  res.json({
+    message: 'Dashboard general',
+    user: req.user
+  });
+});
+
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
