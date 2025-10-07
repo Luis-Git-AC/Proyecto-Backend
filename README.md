@@ -81,4 +81,4 @@ Roles funcionan correctamente
 Admin-> puede cambiar roles y eliminar cualquier usuario
 User-> solo puede eliminar su propia cuenta no cambiar roles
 
-README.md con la documentación del proyecto utilizando https://dillinger.io/
+README.md con la documentación del proyecto utilizando https://dillinger.io/ \*pendiente
