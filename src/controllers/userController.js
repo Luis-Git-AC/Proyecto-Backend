@@ -1,4 +1,5 @@
 const { User } = require('../models');
+const cloudinary = require('../config/cloudinary');
 
 const changeUserRole = async (req, res) => {
   try {
@@ -87,7 +88,6 @@ const deleteUser = async (req, res) => {
       }
     }
 
-    //cloudinary
 
 
     await User.findByIdAndDelete(id);
@@ -107,8 +107,56 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const uploadImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUser = req.user;
+
+    if (currentUser.role !== 'admin' && currentUser._id.toString() !== id) {
+      return res.status(403).json({ 
+        error: 'Solo puedes modificar tu propia imagen.' 
+      });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado.' });
+    }
+
+    if (user.image && user.image.public_id) {
+      try {
+        await cloudinary.uploader.destroy(user.image.public_id);
+      } catch (err) {
+        console.error('❌ Error eliminando imagen anterior en Cloudinary:', err.message);
+      }
+    }
+
+    user.image = {
+      url: req.file.path,
+      public_id: req.file.filename
+    };
+
+    await user.save();
+
+    res.json({
+      message: 'Imagen actualizada exitosamente',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        image: user.image
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error subiendo imagen:', error);
+    res.status(500).json({ error: 'Error del servidor al subir imagen.' });
+  }
+};
+
 module.exports = {
   changeUserRole,
   getAllUsers,
-  deleteUser
+  deleteUser,
+  uploadImage
 };

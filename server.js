@@ -20,12 +20,14 @@ app.post('/auth/login', login);
 
 const authMiddleware = require('./src/middleware/authMiddleware');
 const requireRole = require('./src/middleware/roleMiddleware');
+const upload = require('./src/middleware/uploadMiddleware');
 
-const { changeUserRole, getAllUsers, deleteUser } = require('./src/controllers/userController');
+const { changeUserRole, getAllUsers, deleteUser, uploadImage } = require('./src/controllers/userController');
 
 app.get('/users', authMiddleware, requireRole(['admin']), getAllUsers);
 app.put('/users/role/:id', authMiddleware, requireRole(['admin']), changeUserRole);
-app.delete('/users/:id', authMiddleware, deleteUser); 
+app.delete('/users/:id', authMiddleware, deleteUser);
+app.patch('/users/:id/image', authMiddleware, upload.single('image'), uploadImage);
 
 app.get('/profile', authMiddleware, (req, res) => {
   res.json({
@@ -64,6 +66,25 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 require('./src/models/User');
 require('./src/models/Item');
+
+const cloudinary = require('./src/config/cloudinary');
+app.get('/cloudinary-test', async (req, res) => {
+  try {
+    const result = await cloudinary.api.ping();
+    res.json({
+      message: '✅ Cloudinary conectado correctamente',
+      cloudinary: {
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        status: result.status
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: '❌ Error conectando a Cloudinary',
+      message: error.message
+    });
+  }
+});
 
 app.get('/db-status', (req, res) => {
   const estado = {
