@@ -88,7 +88,14 @@ const deleteUser = async (req, res) => {
       }
     }
 
-
+    if (userToDelete.image && userToDelete.image.public_id) {
+      try {
+        await cloudinary.uploader.destroy(userToDelete.image.public_id);
+        console.log('🗑️ Imagen eliminada de Cloudinary:', userToDelete.image.public_id);
+      } catch (cloudinaryError) {
+        console.error('⚠️ Error eliminando imagen de Cloudinary:', cloudinaryError);
+      }
+    }
 
     await User.findByIdAndDelete(id);
 
