@@ -1,4 +1,4 @@
-const { User } = require('../models');
+const { User, Item } = require('../models');
 const cloudinary = require('../config/cloudinary');
 
 const changeUserRole = async (req, res) => {
@@ -161,9 +161,79 @@ const uploadImage = async (req, res) => {
   }
 };
 
+// Agregar un relatedItem al arreglo del usuario usando $addToSet (sin duplicados)
+const addRelatedItem = async (req, res) => {
+  try {
+    const { id } = req.params; // id del usuario al que añadiremos
+    const { itemId } = req.body; // id del item a añadir
+    const currentUser = req.user;
+
+    // permisos: solo admin o el propio usuario
+    if (currentUser.role !== 'admin' && currentUser._id.toString() !== id) {
+      return res.status(403).json({ error: 'No autorizado para modificar relatedItems de este usuario.' });
+    }
+
+    if (!itemId) return res.status(400).json({ error: 'Se requiere itemId en el body.' });
+
+    if (!require('mongoose').Types.ObjectId.isValid(id) || !require('mongoose').Types.ObjectId.isValid(itemId)) {
+      return res.status(400).json({ error: 'ID inválido.' });
+    }
+
+    // verificar que el item exista
+    const item = await Item.findById(itemId);
+    if (!item) return res.status(404).json({ error: 'Item no encontrado.' });
+
+    const updated = await User.findByIdAndUpdate(
+      id,
+      { $addToSet: { relatedItems: itemId } },
+      { new: true }
+    ).populate('relatedItems');
+
+    if (!updated) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    res.json({ message: 'Item añadido a relatedItems (sin duplicados).', user: { id: updated._id, relatedItems: updated.relatedItems } });
+  } catch (error) {
+    console.error('❌ Error añadiendo relatedItem:', error);
+    res.status(500).json({ error: 'Error del servidor al añadir relatedItem.' });
+  }
+};
+
+// Quitar un relatedItem usando $pull
+const removeRelatedItem = async (req, res) => {
+  try {
+    const { id, itemId } = req.params; // id usuario, itemId a quitar
+    const currentUser = req.user;
+
+    if (currentUser.role !== 'admin' && currentUser._id.toString() !== id) {
+      return res.status(403).json({ error: 'No autorizado para modificar relatedItems de este usuario.' });
+    }
+
+    if (!require('mongoose').Types.ObjectId.isValid(id) || !require('mongoose').Types.ObjectId.isValid(itemId)) {
+      return res.status(400).json({ error: 'ID inválido.' });
+    }
+
+    const updated = await User.findByIdAndUpdate(
+      id,
+      { $pull: { relatedItems: itemId } },
+      { new: true }
+    ).populate('relatedItems');
+
+    if (!updated) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    res.json({ message: 'Item removido de relatedItems.', user: { id: updated._id, relatedItems: updated.relatedItems } });
+  } catch (error) {
+    console.error('❌ Error removiendo relatedItem:', error);
+    res.status(500).json({ error: 'Error del servidor al remover relatedItem.' });
+  }
+};
+
 module.exports = {
   changeUserRole,
   getAllUsers,
   deleteUser,
-  uploadImage
+  uploadImage,
+  addRelatedItem,
+  removeRelatedItem
 };
+
+

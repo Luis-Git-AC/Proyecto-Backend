@@ -23,11 +23,17 @@ const requireRole = require('./src/middleware/roleMiddleware');
 const upload = require('./src/middleware/uploadMiddleware');
 
 const { changeUserRole, getAllUsers, deleteUser, uploadImage } = require('./src/controllers/userController');
+const { addRelatedItem, removeRelatedItem } = require('./src/controllers/userController');
 
 app.get('/users', authMiddleware, requireRole(['admin']), getAllUsers);
 app.put('/users/role/:id', authMiddleware, requireRole(['admin']), changeUserRole);
 app.delete('/users/:id', authMiddleware, deleteUser);
 app.patch('/users/:id/image', authMiddleware, upload.single('image'), uploadImage);
+
+app.post('/users/:id/relatedItems', authMiddleware, addRelatedItem);
+app.delete('/users/:id/relatedItems/:itemId', authMiddleware, removeRelatedItem);
+
+app.use('/items', require('./src/routes/itemRoutes'));
 
 app.get('/profile', authMiddleware, (req, res) => {
   res.json({
