@@ -13,10 +13,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const { register, login } = require('./src/controllers/authController');
-
-app.post('/auth/register', register);
-app.post('/auth/login', login);
+app.use('/auth', require('./src/routes/authRoutes'));
 
 const authMiddleware = require('./src/middleware/authMiddleware');
 const requireRole = require('./src/middleware/roleMiddleware');
