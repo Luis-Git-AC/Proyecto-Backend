@@ -161,14 +161,12 @@ const uploadImage = async (req, res) => {
   }
 };
 
-// Agregar un relatedItem al arreglo del usuario usando $addToSet (sin duplicados)
 const addRelatedItem = async (req, res) => {
   try {
-    const { id } = req.params; // id del usuario al que añadiremos
-    const { itemId } = req.body; // id del item a añadir
+    const { id } = req.params; 
+    const { itemId } = req.body; 
     const currentUser = req.user;
 
-    // permisos: solo admin o el propio usuario
     if (currentUser.role !== 'admin' && currentUser._id.toString() !== id) {
       return res.status(403).json({ error: 'No autorizado para modificar relatedItems de este usuario.' });
     }
@@ -179,7 +177,6 @@ const addRelatedItem = async (req, res) => {
       return res.status(400).json({ error: 'ID inválido.' });
     }
 
-    // verificar que el item exista
     const item = await Item.findById(itemId);
     if (!item) return res.status(404).json({ error: 'Item no encontrado.' });
 
@@ -198,10 +195,9 @@ const addRelatedItem = async (req, res) => {
   }
 };
 
-// Quitar un relatedItem usando $pull
 const removeRelatedItem = async (req, res) => {
   try {
-    const { id, itemId } = req.params; // id usuario, itemId a quitar
+    const { id, itemId } = req.params; 
     const currentUser = req.user;
 
     if (currentUser.role !== 'admin' && currentUser._id.toString() !== id) {
