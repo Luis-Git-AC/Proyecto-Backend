@@ -1,4 +1,5 @@
-const { User, Item } = require('../models');
+const User = require('../models/User');
+const Item = require('../models/Item');
 const cloudinary = require('../config/cloudinary');
 
 const changeUserRole = async (req, res) => {

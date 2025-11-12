@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "seed:admin": "node src/seeds/adminSeed.js",
     "seed:test": "node src/seeds/testData.js",
-    "seed": "npm run seed:admin && npm run seed:test"
+    "seed": "npm run seed:admin && npm run seed:test",
+    "seed:local": "ALLOW_SEED=true npm run seed"
   },
   "keywords": [
     "backend",

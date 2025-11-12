@@ -1,6 +1,16 @@
-const express = require('express');
-const mongoose = require('mongoose');
 require('dotenv').config();
+const express = require('express');
+
+const { connectDB, mongoose } = require('./src/config/db');
+
+const cloudinary = require('./src/config/cloudinary');
+
+const authRoutes = require('./src/routes/authRoutes');
+const itemRoutes = require('./src/routes/itemRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+
+const authMiddleware = require('./src/middleware/authMiddleware');
+const requireRole = require('./src/middleware/roleMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,24 +23,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/auth', require('./src/routes/authRoutes'));
-
-const authMiddleware = require('./src/middleware/authMiddleware');
-const requireRole = require('./src/middleware/roleMiddleware');
-const upload = require('./src/middleware/uploadMiddleware');
-
-const { changeUserRole, getAllUsers, deleteUser, uploadImage } = require('./src/controllers/userController');
-const { addRelatedItem, removeRelatedItem } = require('./src/controllers/userController');
-
-app.get('/users', authMiddleware, requireRole(['admin']), getAllUsers);
-app.put('/users/role/:id', authMiddleware, requireRole(['admin']), changeUserRole);
-app.delete('/users/:id', authMiddleware, deleteUser);
-app.patch('/users/:id/image', authMiddleware, upload.single('image'), uploadImage);
-
-app.post('/users/:id/relatedItems', authMiddleware, addRelatedItem);
-app.delete('/users/:id/relatedItems/:itemId', authMiddleware, removeRelatedItem);
-
-app.use('/items', require('./src/routes/itemRoutes'));
+app.use('/auth', authRoutes);
+app.use('/items', itemRoutes);
+app.use('/users', userRoutes);
 
 app.get('/profile', authMiddleware, (req, res) => {
   res.json({
@@ -53,24 +48,11 @@ app.get('/dashboard', authMiddleware, requireRole(['user', 'admin']), (req, res)
   });
 });
 
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-  .then(() => {
-    console.log('✅ Conectado a MongoDB Atlas');
-    console.log('📊 Base de datos:', mongoose.connection.name);
-    console.log('🎯 Host:', mongoose.connection.host);
-  })
-  .catch(err => {
-    console.log('❌ Error conectando a MongoDB:', err.message);
-    process.exit(1); 
-  });
+connectDB();
 
 require('./src/models/User');
 require('./src/models/Item');
 
-const cloudinary = require('./src/config/cloudinary');
 app.get('/cloudinary-test', async (req, res) => {
   try {
     const result = await cloudinary.api.ping();
@@ -100,14 +82,15 @@ app.get('/db-status', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Servidor funcionando!',
     database: mongoose.connection.readyState === 1 ? 'Conectado' : 'Desconectado'
   });
 });
 
 app.get('/test-models', (req, res) => {
-  const { User, Item } = require('./src/models');
+  const User = require('./src/models/User');
+  const Item = require('./src/models/Item');
   res.json({
     userModel: User ? '✅ User model cargado' : '❌ User model no cargado',
     itemModel: Item ? '✅ Item model cargado' : '❌ Item model no cargado'

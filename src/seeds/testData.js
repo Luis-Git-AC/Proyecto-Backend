@@ -1,41 +1,31 @@
 const mongoose = require('mongoose');
-const { User, Item } = require('../models');
+const User = require('../models/User');
+const Item = require('../models/Item');
+const path = require('path');
 require('dotenv').config();
 
+const ALLOW_SEED = process.env.ALLOW_SEED === 'true';
+
 const createTestData = async () => {
+  if (!ALLOW_SEED || process.env.NODE_ENV === 'production') {
+    console.log('⚠️  Ejecutar seeds está deshabilitado en este entorno. Establece ALLOW_SEED=true en desarrollo para permitirlo.');
+    return;
+  }
+
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Conectado a MongoDB para datos de prueba');
 
-    const testUsers = await User.create([
-      {
-        name: 'Usuario Uno',
-        email: 'user1@test.com',
-        password: '123456',
-        role: 'user'
-      },
-      {
-        name: 'Usuario Dos', 
-        email: 'user2@test.com',
-        password: '123456',
-        role: 'user'
-      }
-    ]);
+    const seed = require(path.join(__dirname, 'data', 'testData.js'));
 
-    const testItems = await Item.create([
-      {
-        name: 'Item de Prueba 1',
-        description: 'Descripción del primer item',
-        price: 29.99,
-        createdBy: testUsers[0]._id
-      },
-      {
-        name: 'Item de Prueba 2',
-        description: 'Descripción del segundo item', 
-        price: 49.99,
-        createdBy: testUsers[1]._id
-      }
-    ]);
+    const testUsers = await User.create(seed.users);
+
+    const itemsToCreate = seed.items.map((it, idx) => ({
+      ...it,
+      createdBy: testUsers[idx % testUsers.length]._id
+    }));
+
+    const testItems = await Item.create(itemsToCreate);
 
     console.log('🎉 Datos de prueba creados:');
     console.log('👥 Usuarios:', testUsers.length);
